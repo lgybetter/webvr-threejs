@@ -18,6 +18,9 @@ module.exports = {
       }
     ]
   },
+  node: {
+   fs: "empty"
+  },
   devServer: {
     contentBase: './public',
     historyApiFallback: true,

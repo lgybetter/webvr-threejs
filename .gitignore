@@ -1,4 +1,4 @@
 node_modules
-public/build
+public/bundle.js
 .DS_store
 .vscode

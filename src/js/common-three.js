@@ -1,5 +1,16 @@
 const THREE = require('three')
 const Stats = require('stats.js')
+require('./loaders/TGALoader')
+// const { MMDLoader } = require('three-mmd-loader')
+// const co = require('co')
+require('./libs/mmdparser.min')
+require('./libs/ammo')
+require('./loaders/TGALoader')
+require('./loaders/MMDLoader')
+require('./effects/OutlineEffect')
+require('./animation/CCDIKSolver')
+require('./animation/MMDPhysics')
+require('./controls/OrbitControls')
 
 class CommonThree {
   constructor() {
@@ -9,104 +20,123 @@ class CommonThree {
     this.camera = null
     this.scene = null
     this.light = null
-    this.line = null
+    this.mesh = null
+    this.effect = null
     this.stats = new Stats()
+    this.windowHalfX = window.innerWidth / 2
+    this.windowHalfY = window.innerHeight / 2
+    this.clock = new THREE.Clock()
+    this.helper = null
+    this.ikHelper = null
+    this.physicsHelper = null
+    this.controls = null
+    this.container = document.createElement('div');
   }
-  initStats () {
-    this.stats.showPanel( 1 );
-    document.body.appendChild( this.stats.dom );
-  }
-  initThree() {
-    this.width = document.getElementById('canvas-frame').clientWidth
-    this.height = document.getElementById('canvas-frame').clientHeight
-    this.renderer = new THREE.WebGLRenderer({
-      antialias: true
-    })
-    this.renderer.setSize(this.width, this.height)
-    document.getElementById('canvas-frame').appendChild(this.renderer.domElement)
-    this.renderer.setClearColor(0xFFFFFF, 1.0)
+  initStats() {
+    this.stats.showPanel(1);
+    document.body.appendChild(this.stats.dom);
   }
   initCamera() {
-    this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 1, 10000);
-    this.camera.position.x = 0
-    this.camera.position.y = 1000
-    this.camera.position.z = 1000
-    this.camera.up.x = 0
-    this.camera.up.y = 0
-    this.camera.up.z = 1
-    this.camera.lookAt({
-      x: 0,
-      y: 0,
-      z: 0
-    })
+    this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000)
+    this.camera.position.z = 30
   }
   initScene() {
     this.scene = new THREE.Scene()
+    this.scene.background = new THREE.Color(0xffffff)
+  }
+  initGrid() {
+    let gridHelper = new THREE.PolarGridHelper(30, 10);
+    gridHelper.position.y = -10;
+    this.scene.add(gridHelper);
   }
   initLight() {
-    // 使用方向光
-    this.light = new THREE.DirectionalLight(0xFF0000, 1.0, 0)
-    this.light.position.set(100, 100, 200)
     // 使用环境光
-    // this.light = new THREE.AmbientLight(0xFF0000)
-    // this.light.position.set(100, 100, 200)
-    // 使用聚光灯
-    // this.light = new THREE.SpotLight(0xFF0000, 1.0, 90, 0, 0)
-    // this.light.position.set(100, 100, 200)
-    // 使用点光源
-    this.light = new THREE.PointLight(0xFFFF00);
-    this.light.position.set(0, 0, 50);
-    this.scene.add(this.light)
+    let ambient = new THREE.AmbientLight(0x666666);
+    this.scene.add(ambient);
+    // 叠加平行光
+    let directionalLight = new THREE.DirectionalLight(0x887766)
+    directionalLight.position.set(-1, 1, 1).normalize()
+    this.scene.add(directionalLight)
+  }
+  initThree() {
+    document.body.appendChild(this.container)
+    // this.width = document.getElementById('canvas-frame').clientWidth
+    // this.height = document.getElementById('canvas-frame').clientHeight
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true // 抗锯齿
+    })
+    this.renderer.setPixelRatio(window.devicePixelRatio)
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.container.appendChild(this.renderer.domElement);
+    this.effect = new THREE.OutlineEffect(this.renderer);
+    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
   }
   initObject() {
-    // let geometry = new THREE.Geometry()
-    // let material = new THREE.LineBasicMaterial({ vertexColors: THREE.VertexColors });
-    // let color1 = new THREE.Color(0x444444), color2 = new THREE.Color(0xFF0000);
+    this.importMMD()
+  }
 
-    // let p1 = new THREE.Vector3(-100, 0, 100)
-    // let p2 = new THREE.Vector3(100, 0, -100)
-    // geometry.vertices.push(p1)
-    // geometry.vertices.push(p2)
-    // geometry.colors.push(color1, color2)
-
-    // this.line = new THREE.Line(geometry, material, THREE.LineSegments)
-    // this.scene.add(this.line)
-    let geometry = new THREE.CubeGeometry( 200, 100, 50,4,4);
-    let material = new THREE.MeshLambertMaterial( { color:0xFFFFFF} );
-    let mesh1 = new THREE.Mesh( geometry,material);
-    mesh1.position.set(0, 0, 0)
-    this.scene.add(mesh1);
-    let mesh2 = new THREE.Mesh( geometry,material);
-    mesh2.position.set(100, -150, 100)
-    this.scene.add(mesh2);    
-    let mesh3 = new THREE.Mesh( geometry,material);
-    mesh3.position.set(-200, -150, 300)
-    this.scene.add(mesh3);    
-    let mesh4 = new THREE.Mesh( geometry,material);
-    mesh4.position.set(-200, 150, -200)
-    this.scene.add(mesh4);
+  // 导入mmd模型
+  importMMD() {
+    let modelFile = 'asserts/models/mmd/skeleton/Skeleton.pmx'
+    let vmdFiles = ['asserts/models/mmd/vmds/wavefile_v2.vmd']
+    let loader = new THREE.MMDLoader()
+    this.helper = new THREE.MMDHelper()
+    loader.load(modelFile, vmdFiles, object => {
+      this.mesh = object
+      this.mesh.position.y = -10
+      this.scene.add(this.mesh)
+      this.helper.add(this.mesh)
+      this.helper.setAnimation(this.mesh)
+      this.ikHelper = new THREE.CCDIKHelper(this.mesh)
+      this.ikHelper.visible = false
+      this.scene.add(this.ikHelper)
+      this.helper.setPhysics(this.mesh);
+      this.physicsHelper = new THREE.MMDPhysicsHelper(this.mesh)
+      this.physicsHelper.visible = false
+      this.scene.add(this.physicsHelper)
+      this.helper.unifyAnimationDuration({ afterglow: 2.0 })
+      this.helper.doAnimation = true
+      this.helper.doIk = true
+      this.helper.enablePhysics = true
+    }, xhr => {
+      if (xhr.lengthComputable) {
+        var percentComplete = xhr.loaded / xhr.total * 100;
+        console.log(Math.round(percentComplete, 2) + '% downloaded')
+      }
+    }, err => {
+      console.log(err)
+    })
   }
 
   render() {
-    this.stats.begin()
-    this.renderer.clear()
-    this.renderer.render(this.scene, this.camera)
-    // this.line.position.x -= 1
-    // this.line.position.y -= 1
-    // this.line.position.z += 1
-    let render = this.render.bind(this)
-    this.stats.end()
-    requestAnimationFrame(render)
+    this.helper.animate(this.clock.getDelta());
+    if (this.physicsHelper != null && this.physicsHelper.visible) {
+      this.physicsHelper.update()
+    }
+    if (this.ikHelper != null && this.ikHelper.visible) {
+      this.ikHelper.update()
+    }
+    // this.renderer.render(this.scene, this.camera)
+    this.effect.render(this.scene, this.camera)
+  }
+
+  animate() {
+    this.stats.begin();
+    this.render();
+    this.stats.end();
+    let animate = this.animate.bind(this)
+    requestAnimationFrame(animate);
   }
 
   start() {
-    this.initStats()
-    this.initThree()
     this.initCamera()
     this.initScene()
+    this.initGrid()
     this.initLight()
+    this.initThree()
+    this.initStats()
     this.initObject()
-    this.render()
+    this.animate()
   }
 }
 
