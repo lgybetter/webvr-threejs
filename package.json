@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@tweenjs/tween.js": "^17.1.0",
+    "ammo.js": "^0.0.10",
     "co": "^4.6.0",
     "express": "^4.15.3",
     "mmd-parser": "^1.0.3",

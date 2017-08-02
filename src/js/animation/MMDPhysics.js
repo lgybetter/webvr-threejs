@@ -19,7 +19,7 @@
  *  - object scale change support
  */
 const THREE = require('three')
-
+const Ammo = require('ammo.js')
 THREE.MMDPhysics = function ( mesh, params ) {
 
 	if ( params === undefined ) params = {};
