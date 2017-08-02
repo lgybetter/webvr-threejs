@@ -109,7 +109,7 @@ class CommonThree {
 
   // 导入mmd模型
   importMMD() {
-    let modelFile = 'asserts/models/mmd/skeleton/Skeleton.pmx'
+    let modelFile = 'asserts/models/mmd/bikini-miku/sakura.pmx'
     let vmdFiles = ['asserts/models/mmd/vmds/wavefile_v2.vmd']
     let loader = new THREE.MMDLoader()
     this.helper = new THREE.MMDHelper()
