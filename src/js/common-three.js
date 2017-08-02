@@ -1,5 +1,9 @@
 const THREE = require('three')
 const Stats = require('stats.js')
+require('./polyfill/webvr-polyfill')
+require('./controls/VRControls')
+require('./effects/VREffect')
+const WebVRManager = require('./manager/webvr-manager')
 require('./loaders/TGALoader')
 // const { MMDLoader } = require('three-mmd-loader')
 // const co = require('co')
@@ -10,7 +14,7 @@ require('./loaders/MMDLoader')
 require('./effects/OutlineEffect')
 require('./animation/CCDIKSolver')
 require('./animation/MMDPhysics')
-require('./controls/OrbitControls')
+// require('./controls/OrbitControls')
 
 class CommonThree {
   constructor() {
@@ -22,6 +26,7 @@ class CommonThree {
     this.light = null
     this.mesh = null
     this.effect = null
+    this.manager = null
     this.stats = new Stats()
     this.windowHalfX = window.innerWidth / 2
     this.windowHalfY = window.innerHeight / 2
@@ -32,23 +37,40 @@ class CommonThree {
     this.controls = null
     this.container = document.createElement('div')
   }
+
+  /*************************************************************
+   *  Three Js 部分
+   *************************************************************/
+
+  // 实时状态器
   initStats() {
     this.stats.showPanel(1)
     document.body.appendChild(this.stats.dom)
   }
+  // 摄像机
   initCamera() {
     this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000)
     this.camera.position.z = 30
   }
+  // 场景
   initScene() {
     this.scene = new THREE.Scene()
-    this.scene.background = new THREE.Color(0xffffff)
+    this.scene.background = new THREE.Color(0x000000)
   }
-  initGrid() {
-    let gridHelper = new THREE.PolarGridHelper(30, 10)
-    gridHelper.position.y = -10
-    this.scene.add(gridHelper)
+  // 底部布局
+  initGrid(width, height) {
+    // let gridHelper = new THREE.PolarGridHelper(30, 10)
+    // gridHelper.position.y = -10
+    // this.scene.add(gridHelper)
+    let groundPlane = new THREE.PlaneBufferGeometry(width, height) 
+    let groundMetirial = new THREE.MeshPhongMaterial({ color: 0xaaaaaa })
+    let ground = new THREE.Mesh(groundPlane, groundMetirial)
+    ground.rotation.x = - Math.PI / 2
+    ground.position.y = -10
+    ground.receiveShadow = true
+    this.scene.add(ground)
   }
+  // 光线
   initLight() {
     // 使用环境光
     let ambient = new THREE.AmbientLight(0x666666)
@@ -58,6 +80,7 @@ class CommonThree {
     directionalLight.position.set(-1, 1, 1).normalize()
     this.scene.add(directionalLight)
   }
+  // 渲染器渲染
   initThree() {
     document.body.appendChild(this.container)
     this.renderer = new THREE.WebGLRenderer({
@@ -66,11 +89,11 @@ class CommonThree {
     this.renderer.setPixelRatio(window.devicePixelRatio)
     this.renderer.setSize(window.innerWidth, window.innerHeight)
     this.container.appendChild(this.renderer.domElement)
-    this.effect = new THREE.OutlineEffect(this.renderer)
-    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement)
-    window.addEventListener('resize', this.onWindowResize.bind(this), false);
+    // this.effect = new THREE.OutlineEffect(this.renderer)
+    // this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement)
   }
 
+  // 监听窗口变化事件
   onWindowResize() {
     this.windowHalfX = window.innerWidth / 2;
     this.windowHalfY = window.innerHeight / 2;
@@ -79,6 +102,7 @@ class CommonThree {
     this.effect.setSize(window.innerWidth, window.innerHeight);
   }
 
+  // 物体对象
   initObject() {
     this.importMMD()
   }
@@ -116,6 +140,7 @@ class CommonThree {
     })
   }
 
+  // 动画渲染更新
   render() {
     this.helper.animate(this.clock.getDelta())
     if (this.physicsHelper != null && this.physicsHelper.visible) {
@@ -124,10 +149,12 @@ class CommonThree {
     if (this.ikHelper != null && this.ikHelper.visible) {
       this.ikHelper.update()
     }
+    this.controls.update()
     // this.renderer.render(this.scene, this.camera)
-    this.effect.render(this.scene, this.camera)
+    this.manager.render(this.scene, this.camera)
   }
 
+  // 刷帧
   animate() {
     this.stats.begin()
     this.render()
@@ -136,14 +163,46 @@ class CommonThree {
     requestAnimationFrame(animate)
   }
 
+  /*************************************************************
+   *  Web VR 部分
+   *************************************************************/
+
+  // 创建准心，用于模拟VR
+  createCrosshair() {
+    let crosshair = new THREE.Mesh(new THREE.RingGeometry(0.02, 0.04, 32), new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+			opacity: 0.5,
+			transparent: true
+    }))
+    crosshair.position.z = -2
+    this.camera.add(crosshair)
+  }
+
+  // 初始化VR控件
+  initVR () {
+    
+    this.effect = new THREE.VREffect(this.renderer)
+    this.controls = new THREE.VRControls(this.camera)
+    this.manager = new WebVRManager(this.renderer, this.effect)
+  }
+
+  initEvent() {
+    window.addEventListener('resize', this.onWindowResize.bind(this), false);
+  }
+
+  // 开始入口函数
   start() {
     this.initCamera()
+    this.createCrosshair()
     this.initScene()
-    this.initGrid()
+    this.initGrid(1000,1000)
     this.initLight()
     this.initThree()
+    this.initVR()
+    this.initEvent()
     this.initStats()
     this.initObject()
+    this.initVR()
     this.animate()
   }
 }
