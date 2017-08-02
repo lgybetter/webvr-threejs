@@ -30,11 +30,11 @@ class CommonThree {
     this.ikHelper = null
     this.physicsHelper = null
     this.controls = null
-    this.container = document.createElement('div');
+    this.container = document.createElement('div')
   }
   initStats() {
-    this.stats.showPanel(1);
-    document.body.appendChild(this.stats.dom);
+    this.stats.showPanel(1)
+    document.body.appendChild(this.stats.dom)
   }
   initCamera() {
     this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000)
@@ -45,14 +45,14 @@ class CommonThree {
     this.scene.background = new THREE.Color(0xffffff)
   }
   initGrid() {
-    let gridHelper = new THREE.PolarGridHelper(30, 10);
-    gridHelper.position.y = -10;
-    this.scene.add(gridHelper);
+    let gridHelper = new THREE.PolarGridHelper(30, 10)
+    gridHelper.position.y = -10
+    this.scene.add(gridHelper)
   }
   initLight() {
     // 使用环境光
-    let ambient = new THREE.AmbientLight(0x666666);
-    this.scene.add(ambient);
+    let ambient = new THREE.AmbientLight(0x666666)
+    this.scene.add(ambient)
     // 叠加平行光
     let directionalLight = new THREE.DirectionalLight(0x887766)
     directionalLight.position.set(-1, 1, 1).normalize()
@@ -60,17 +60,25 @@ class CommonThree {
   }
   initThree() {
     document.body.appendChild(this.container)
-    // this.width = document.getElementById('canvas-frame').clientWidth
-    // this.height = document.getElementById('canvas-frame').clientHeight
     this.renderer = new THREE.WebGLRenderer({
       antialias: true // 抗锯齿
     })
     this.renderer.setPixelRatio(window.devicePixelRatio)
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.container.appendChild(this.renderer.domElement);
-    this.effect = new THREE.OutlineEffect(this.renderer);
-    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+    this.renderer.setSize(window.innerWidth, window.innerHeight)
+    this.container.appendChild(this.renderer.domElement)
+    this.effect = new THREE.OutlineEffect(this.renderer)
+    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement)
+    window.addEventListener('resize', this.onWindowResize.bind(this), false);
   }
+
+  onWindowResize() {
+    this.windowHalfX = window.innerWidth / 2;
+    this.windowHalfY = window.innerHeight / 2;
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+    this.effect.setSize(window.innerWidth, window.innerHeight);
+  }
+
   initObject() {
     this.importMMD()
   }
@@ -90,7 +98,7 @@ class CommonThree {
       this.ikHelper = new THREE.CCDIKHelper(this.mesh)
       this.ikHelper.visible = false
       this.scene.add(this.ikHelper)
-      this.helper.setPhysics(this.mesh);
+      this.helper.setPhysics(this.mesh)
       this.physicsHelper = new THREE.MMDPhysicsHelper(this.mesh)
       this.physicsHelper.visible = false
       this.scene.add(this.physicsHelper)
@@ -100,7 +108,7 @@ class CommonThree {
       this.helper.enablePhysics = true
     }, xhr => {
       if (xhr.lengthComputable) {
-        var percentComplete = xhr.loaded / xhr.total * 100;
+        var percentComplete = xhr.loaded / xhr.total * 100
         console.log(Math.round(percentComplete, 2) + '% downloaded')
       }
     }, err => {
@@ -109,7 +117,7 @@ class CommonThree {
   }
 
   render() {
-    this.helper.animate(this.clock.getDelta());
+    this.helper.animate(this.clock.getDelta())
     if (this.physicsHelper != null && this.physicsHelper.visible) {
       this.physicsHelper.update()
     }
@@ -121,11 +129,11 @@ class CommonThree {
   }
 
   animate() {
-    this.stats.begin();
-    this.render();
-    this.stats.end();
+    this.stats.begin()
+    this.render()
+    this.stats.end()
     let animate = this.animate.bind(this)
-    requestAnimationFrame(animate);
+    requestAnimationFrame(animate)
   }
 
   start() {
