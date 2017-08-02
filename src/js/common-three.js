@@ -28,6 +28,7 @@ class CommonThree {
     this.effect = null
     this.manager = null
     this.stats = new Stats()
+    this.ready = false
     this.windowHalfX = window.innerWidth / 2
     this.windowHalfY = window.innerHeight / 2
     this.clock = new THREE.Clock()
@@ -62,7 +63,7 @@ class CommonThree {
     // let gridHelper = new THREE.PolarGridHelper(30, 10)
     // gridHelper.position.y = -10
     // this.scene.add(gridHelper)
-    let groundPlane = new THREE.PlaneBufferGeometry(width, height) 
+    let groundPlane = new THREE.PlaneBufferGeometry(width, height)
     let groundMetirial = new THREE.MeshPhongMaterial({ color: 0xaaaaaa })
     let ground = new THREE.Mesh(groundPlane, groundMetirial)
     ground.rotation.x = - Math.PI / 2
@@ -109,14 +110,16 @@ class CommonThree {
 
   // 导入mmd模型
   importMMD() {
-    let modelFile = 'asserts/models/mmd/bikini-miku/sakura.pmx'
-    let vmdFiles = ['asserts/models/mmd/vmds/wavefile_v2.vmd']
+    let modelFile = 'asserts/models/mmd/skeleton/Skeleton.pmx'
+    let vmdFiles = ['asserts/models/mmd/vmds/power.vmd']
+    let audioFile = 'asserts/models/mmd/audios/power.mp3'
+    let audioParams = { delayTime: 0 };
     let loader = new THREE.MMDLoader()
     this.helper = new THREE.MMDHelper()
     loader.load(modelFile, vmdFiles, object => {
       this.mesh = object
       this.mesh.position.y = -10
-      this.scene.add(this.mesh)
+      // this.scene.add(this.mesh)
       this.helper.add(this.mesh)
       this.helper.setAnimation(this.mesh)
       this.ikHelper = new THREE.CCDIKHelper(this.mesh)
@@ -126,10 +129,25 @@ class CommonThree {
       this.physicsHelper = new THREE.MMDPhysicsHelper(this.mesh)
       this.physicsHelper.visible = false
       this.scene.add(this.physicsHelper)
-      this.helper.unifyAnimationDuration({ afterglow: 2.0 })
       this.helper.doAnimation = true
       this.helper.doIk = true
       this.helper.enablePhysics = true
+      loader.loadAudio(audioFile,  (audio, listener) => {
+        listener.position.z = 1;
+        this.helper.setAudio(audio, listener, audioParams);
+        this.helper.unifyAnimationDuration({ afterglow: 2.0 })
+        this.scene.add(audio);
+        this.scene.add(listener);
+        this.scene.add(this.mesh);
+        this.ready = true;
+      }, xhr => {
+        if (xhr.lengthComputable) {
+          var percentComplete = xhr.loaded / xhr.total * 100
+          console.log(Math.round(percentComplete, 2) + '% downloaded')
+        }
+      }, err => {
+        console.log(err)
+      })
     }, xhr => {
       if (xhr.lengthComputable) {
         var percentComplete = xhr.loaded / xhr.total * 100
@@ -142,16 +160,18 @@ class CommonThree {
 
   // 动画渲染更新
   render() {
-    this.helper.animate(this.clock.getDelta())
-    if (this.physicsHelper != null && this.physicsHelper.visible) {
-      this.physicsHelper.update()
+    if(this.ready) {
+      this.helper.animate(this.clock.getDelta())
+      if (this.physicsHelper != null && this.physicsHelper.visible) {
+        this.physicsHelper.update()
+      }
+      if (this.ikHelper != null && this.ikHelper.visible) {
+        this.ikHelper.update()
+      }
+      this.controls.update()
+      // this.renderer.render(this.scene, this.camera)
+      this.manager.render(this.scene, this.camera)
     }
-    if (this.ikHelper != null && this.ikHelper.visible) {
-      this.ikHelper.update()
-    }
-    this.controls.update()
-    // this.renderer.render(this.scene, this.camera)
-    this.manager.render(this.scene, this.camera)
   }
 
   // 刷帧
@@ -171,16 +191,16 @@ class CommonThree {
   createCrosshair() {
     let crosshair = new THREE.Mesh(new THREE.RingGeometry(0.02, 0.04, 32), new THREE.MeshBasicMaterial({
       color: 0xffffff,
-			opacity: 0.5,
-			transparent: true
+      opacity: 0.5,
+      transparent: true
     }))
     crosshair.position.z = -2
     this.camera.add(crosshair)
   }
 
   // 初始化VR控件
-  initVR () {
-    
+  initVR() {
+
     this.effect = new THREE.VREffect(this.renderer)
     this.controls = new THREE.VRControls(this.camera)
     this.manager = new WebVRManager(this.renderer, this.effect)
@@ -195,7 +215,7 @@ class CommonThree {
     this.initCamera()
     this.createCrosshair()
     this.initScene()
-    this.initGrid(1000,1000)
+    this.initGrid(1000, 1000)
     this.initLight()
     this.initThree()
     this.initVR()
