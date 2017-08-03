@@ -6,16 +6,6 @@
   version "17.1.0"
   resolved "http://r.cnpmjs.org/@tweenjs/tween.js/download/@tweenjs/tween.js-17.1.0.tgz#87e889dfd57a6ecbcf54401938c0422e80b87306"
 
-"@types/three@*":
-  version "0.84.19"
-  resolved "http://r.cnpmjs.org/@types/three/download/@types/three-0.84.19.tgz#8ee4c9c045fc6ece78f794ca33ea628825403d17"
-  dependencies:
-    "@types/webvr-api" "*"
-
-"@types/webvr-api@*":
-  version "0.0.31"
-  resolved "http://r.cnpmjs.org/@types/webvr-api/download/@types/webvr-api-0.0.31.tgz#f6061fe88a035d34a8b6a0c55f8758901ec8a08e"
-
 abbrev@1:
   version "1.1.0"
   resolved "http://r.cnpmjs.org/abbrev/download/abbrev-1.1.0.tgz#d0554c2256636e2f56e7c2e5ad183f859428d81f"
@@ -1655,7 +1645,7 @@ expand-range@^1.8.1:
   dependencies:
     fill-range "^2.1.0"
 
-express@^4.13.3:
+express@^4.13.3, express@^4.15.3:
   version "4.15.3"
   resolved "http://r.cnpmjs.org/express/download/express-4.15.3.tgz#bab65d0f03aa80c358408972fc700f916944b662"
   dependencies:
@@ -3757,14 +3747,6 @@ tar@^2.2.1:
     block-stream "*"
     fstream "^1.0.2"
     inherits "2"
-
-three-mmd-loader@^0.0.7:
-  version "0.0.7"
-  resolved "http://r.cnpmjs.org/three-mmd-loader/download/three-mmd-loader-0.0.7.tgz#84c41515a62b3ac4b60c9846b30e6113333fb42b"
-  dependencies:
-    "@types/three" "*"
-    ammo.js "^0.0.10"
-    mmd-parser "^1.0.3"
 
 three@^0.86.0:
   version "0.86.0"

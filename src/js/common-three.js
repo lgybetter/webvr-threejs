@@ -59,17 +59,55 @@ class CommonThree {
     this.scene.background = new THREE.Color(0x000000)
   }
   // 底部布局
-  initGrid(width, height) {
+  initGrid(width = 1000, height = 1000) {
     // let gridHelper = new THREE.PolarGridHelper(30, 10)
     // gridHelper.position.y = -10
     // this.scene.add(gridHelper)
-    let groundPlane = new THREE.PlaneBufferGeometry(width, height)
-    let groundMetirial = new THREE.MeshPhongMaterial({ color: 0xaaaaaa })
-    let ground = new THREE.Mesh(groundPlane, groundMetirial)
-    ground.rotation.x = - Math.PI / 2
-    ground.position.y = -10
-    ground.receiveShadow = true
-    this.scene.add(ground)
+
+    // let groundPlane = new THREE.PlaneBufferGeometry(width, height)
+    // let groundMetirial = new THREE.MeshPhongMaterial({ color: 0xaaaaaa })
+    // let ground = new THREE.Mesh(groundPlane, groundMetirial)
+    // ground.rotation.x = - Math.PI / 2
+    // ground.position.y = -10
+    // ground.receiveShadow = true
+    // this.scene.add(ground)
+    let r = "asserts/textures/cube/Park3Med/"
+    let urls = [
+      r + "px.jpg", r + "nx.jpg",
+      r + "py.jpg", r + "ny.jpg",
+      r + "pz.jpg", r + "nz.jpg"
+    ]
+    let textureCube = new THREE.CubeTextureLoader().load(urls)
+    textureCube.format = THREE.RGBFormat
+    textureCube.mapping = THREE.CubeReflectionMapping
+    let cubeShader = THREE.ShaderLib["cube"]
+    let cubeMaterial = new THREE.ShaderMaterial({
+      fragmentShader: cubeShader.fragmentShader,
+      vertexShader: cubeShader.vertexShader,
+      uniforms: cubeShader.uniforms,
+      depthWrite: false,
+      side: THREE.BackSide
+    })
+    cubeMaterial.uniforms["tCube"].value = textureCube
+    let cubeMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(100, 100, 100), cubeMaterial)
+
+    let textureLoader = new THREE.TextureLoader()
+    let textureEquirec = textureLoader.load("asserts/textures/kkxl.jpg")
+    textureEquirec.mapping = THREE.EquirectangularReflectionMapping
+    textureEquirec.magFilter = THREE.LinearFilter
+    textureEquirec.minFilter = THREE.LinearMipMapLinearFilter
+    let equirectShader = THREE.ShaderLib["equirect"]
+    let equirectMaterial = new THREE.ShaderMaterial({
+      fragmentShader: equirectShader.fragmentShader,
+      vertexShader: equirectShader.vertexShader,
+      uniforms: equirectShader.uniforms,
+      depthWrite: false,
+      side: THREE.BackSide
+    })
+    equirectMaterial.uniforms["tEquirect"].value = textureEquirec
+    // cubeMesh.material = equirectMaterial
+    
+    this.scene.add(cubeMesh)
   }
   // 光线
   initLight() {
@@ -96,11 +134,11 @@ class CommonThree {
 
   // 监听窗口变化事件
   onWindowResize() {
-    this.windowHalfX = window.innerWidth / 2;
-    this.windowHalfY = window.innerHeight / 2;
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
-    this.effect.setSize(window.innerWidth, window.innerHeight);
+    this.windowHalfX = window.innerWidth / 2
+    this.windowHalfY = window.innerHeight / 2
+    this.camera.aspect = window.innerWidth / window.innerHeight
+    this.camera.updateProjectionMatrix()
+    this.effect.setSize(window.innerWidth, window.innerHeight)
   }
 
   // 物体对象
@@ -110,10 +148,10 @@ class CommonThree {
 
   // 导入mmd模型
   importMMD() {
-    let modelFile = 'asserts/models/mmd/skeleton/Skeleton.pmx'
+    let modelFile = 'asserts/models/mmd/miku/miku_v2.pmd'
     let vmdFiles = ['asserts/models/mmd/vmds/power.vmd']
     let audioFile = 'asserts/models/mmd/audios/power.mp3'
-    let audioParams = { delayTime: 0 };
+    let audioParams = { delayTime: 0 }
     let loader = new THREE.MMDLoader()
     this.helper = new THREE.MMDHelper()
     loader.load(modelFile, vmdFiles, object => {
@@ -132,14 +170,14 @@ class CommonThree {
       this.helper.doAnimation = true
       this.helper.doIk = true
       this.helper.enablePhysics = true
-      loader.loadAudio(audioFile,  (audio, listener) => {
-        listener.position.z = 1;
-        this.helper.setAudio(audio, listener, audioParams);
+      loader.loadAudio(audioFile, (audio, listener) => {
+        listener.position.z = 1
+        this.helper.setAudio(audio, listener, audioParams)
         this.helper.unifyAnimationDuration({ afterglow: 2.0 })
-        this.scene.add(audio);
-        this.scene.add(listener);
-        this.scene.add(this.mesh);
-        this.ready = true;
+        this.scene.add(audio)
+        this.scene.add(listener)
+        this.scene.add(this.mesh)
+        this.ready = true
       }, xhr => {
         if (xhr.lengthComputable) {
           var percentComplete = xhr.loaded / xhr.total * 100
@@ -160,7 +198,7 @@ class CommonThree {
 
   // 动画渲染更新
   render() {
-    if(this.ready) {
+    if (this.ready) {
       this.helper.animate(this.clock.getDelta())
       if (this.physicsHelper != null && this.physicsHelper.visible) {
         this.physicsHelper.update()
@@ -207,7 +245,7 @@ class CommonThree {
   }
 
   initEvent() {
-    window.addEventListener('resize', this.onWindowResize.bind(this), false);
+    window.addEventListener('resize', this.onWindowResize.bind(this), false)
   }
 
   // 开始入口函数
