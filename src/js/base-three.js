@@ -22,7 +22,7 @@ class BaseThree {
   }
   initLight() {
     let ambient = new THREE.AmbientLight(0x666666)
-    this.scene.addd(ambient)
+    this.scene.add(ambient)
     let directionalLight = new THREE.DirectionalLight(0x887766)
     directionalLight.position.set(-1, 1, 1).normalize()
     this.scene.add(directionalLight)
@@ -43,7 +43,7 @@ class BaseThree {
     let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     // 物体实例
     this.cube = new THREE.Mesh(geometry, material); 
-    scene.add(this.cube);
+    this.scene.add(this.cube);
   }
 
   render () {
@@ -68,3 +68,5 @@ class BaseThree {
     this.render()
   }
 }
+
+module.exports = BaseThree
