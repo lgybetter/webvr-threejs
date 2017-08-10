@@ -177,5 +177,94 @@ initVR() {
 }
 ```
 
+```javascript
+// 动画渲染更新
+render() {
+  if (this.ready) {
+    this.helper.animate(this.clock.getDelta())
+    if (this.physicsHelper != null && this.physicsHelper.visible) {
+      // 物理重力等效果
+      this.physicsHelper.update()
+    }
+    // 加载MMD模型时使用
+    if (this.ikHelper != null && this.ikHelper.visible) {
+      this.ikHelper.update()
+    }
+    // 使控制器能够实时更新
+    this.controls.update()
+    // this.renderer.render(this.scene, this.camera)
+    this.manager.render(this.scene, this.camera)
+  }
+}
+```
 
+## WebVR结合ThreeJS发生的碰撞
 
+### 导入MMD模型
+
+- 引入MMD模型解析脚本
+  - MMDParser.js
+  - TGALoader.js
+  - MMDLoader.js
+  - CCDIKSolver.js
+  - MMDPhysics.js
+
+```javascript
+// 导入mmd模型
+importMMD() {
+  // 模型文件路径
+  let modelFile = 'asserts/models/mmd/bikini-miku/sakura.pmx'
+  // 模型动作文件
+  let vmdFiles = ['asserts/models/mmd/vmds/power.vmd']
+  // 背景音乐文件
+  let audioFile = 'asserts/models/mmd/audios/power.mp3'
+  let audioParams = { delayTime: 0 }
+  // 新建一个loader用于加载mmd模型
+  let loader = new THREE.MMDLoader()
+  this.helper = new THREE.MMDHelper()
+  // 异步加载文件
+  loader.load(modelFile, vmdFiles, object => {
+    this.mesh = object
+    this.mesh.position.y = -10
+    // this.scene.add(this.mesh)
+    this.helper.add(this.mesh)
+    // 设置模型动画
+    this.helper.setAnimation(this.mesh)
+    this.ikHelper = new THREE.CCDIKHelper(this.mesh)
+    this.ikHelper.visible = false
+    this.scene.add(this.ikHelper)
+    // 设置模型物理动效
+    this.helper.setPhysics(this.mesh)
+    this.physicsHelper = new THREE.MMDPhysicsHelper(this.mesh)
+    this.physicsHelper.visible = false
+    this.scene.add(this.physicsHelper)
+    this.helper.doAnimation = true
+    this.helper.doIk = true
+    this.helper.enablePhysics = true
+    // 加载音乐
+    loader.loadAudio(audioFile, (audio, listener) => {
+      listener.position.z = 1
+      this.helper.setAudio(audio, listener, audioParams)
+      this.helper.unifyAnimationDuration({ afterglow: 2.0 })
+      this.scene.add(audio)
+      this.scene.add(listener)
+      this.scene.add(this.mesh)
+      this.ready = true
+    }, xhr => {
+      if (xhr.lengthComputable) {
+        var percentComplete = xhr.loaded / xhr.total * 100
+        console.log(Math.round(percentComplete, 2) + '% downloaded')
+      }
+    }, err => {
+      console.log(err)
+    })
+  }, xhr => {
+    if (xhr.lengthComputable) {
+      var percentComplete = xhr.loaded / xhr.total * 100
+      console.log(Math.round(percentComplete, 2) + '% downloaded')
+    }
+  }, err => {
+    console.log(err)
+  })
+}
+```
