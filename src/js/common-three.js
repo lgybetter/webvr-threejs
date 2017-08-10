@@ -148,7 +148,7 @@ class CommonThree {
 
   // 导入mmd模型
   importMMD() {
-    let modelFile = 'asserts/models/mmd/bikini-miku/sakura.pmx'
+    let modelFile = 'asserts/models/mmd/TDAUndefinedMiku/Undefined.pmx'
     let vmdFiles = ['asserts/models/mmd/vmds/power.vmd']
     let audioFile = 'asserts/models/mmd/audios/power.mp3'
     let audioParams = { delayTime: 0 }

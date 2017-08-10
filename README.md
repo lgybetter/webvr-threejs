@@ -268,3 +268,36 @@ importMMD() {
   })
 }
 ```
+
+### 创建一个全景环境
+
+- 准备文件：6张不同视角的图片，或者一张全景拍摄的图片
+
+- 读取图片文件并渲染
+
+- 使用6张不同视角图片组合的立体全景效果
+
+```javascript
+let urls = [
+  r + "px.jpg", r + "nx.jpg",
+  r + "py.jpg", r + "ny.jpg",
+  r + "pz.jpg", r + "nz.jpg"
+]
+// 加载图片
+let textureCube = new THREE.CubeTextureLoader().load(urls)
+textureCube.format = THREE.RGBFormat
+textureCube.mapping = THREE.CubeReflectionMapping
+let cubeShader = THREE.ShaderLib["cube"]
+let cubeMaterial = new THREE.ShaderMaterial({
+  fragmentShader: cubeShader.fragmentShader,
+  vertexShader: cubeShader.vertexShader,
+  uniforms: cubeShader.uniforms,
+  depthWrite: false,
+  side: THREE.BackSide
+})
+cubeMaterial.uniforms["tCube"].value = textureCube
+let cubeMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(100, 100, 100), cubeMaterial)
+this.scene.add(cubeMesh)
+```
+
+最后一起看效果
